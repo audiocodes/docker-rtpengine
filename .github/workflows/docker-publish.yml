@@ -20,7 +20,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            orgads/rtpengine
+            audiocodes/rtpengine
           tags: |
             type=match,pattern=v(.*),group=1
 
