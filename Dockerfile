@@ -37,10 +37,12 @@ RUN git clone --depth 1 --branch mr12.5.1.4 https://github.com/sipwise/rtpengine
 FROM build AS rtpengine
 WORKDIR /usr/src/rtpengine/daemon
 RUN make -j$(nproc)
+RUN strip rtpengine
 
 FROM build AS rtpengine-recording
 WORKDIR /usr/src/rtpengine/recording-daemon
 RUN make -j$(nproc)
+RUN strip rtpengine-recording
 
 FROM debian:bookworm-slim
 
