@@ -28,21 +28,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libwebsockets-dev \
   libxmlrpc-core-c3-dev \
   make \
-  markdown \
-  pandoc
+  markdown
 
 WORKDIR /usr/src
 RUN git clone --depth 1 --branch mr12.5.1.7 https://github.com/sipwise/rtpengine
 
 FROM build AS rtpengine
 WORKDIR /usr/src/rtpengine/daemon
-RUN make -j$(nproc)
-RUN strip rtpengine
+RUN make -j$(nproc) rtpengine && \
+  strip -o /usr/local/bin/rtpengine rtpengine
 
 FROM build AS rtpengine-recording
 WORKDIR /usr/src/rtpengine/recording-daemon
-RUN make -j$(nproc)
-RUN strip rtpengine-recording
+RUN make -j$(nproc) rtpengine-recording && \
+  strip -o /usr/local/bin/rtpengine-recording rtpengine-recording
 
 FROM debian:bookworm-slim
 
@@ -81,8 +80,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   sudo \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=rtpengine /usr/src/rtpengine/daemon/rtpengine /usr/local/bin/
-COPY --from=rtpengine-recording /usr/src/rtpengine/recording-daemon/rtpengine-recording /usr/local/bin/
+COPY --from=rtpengine /usr/local/bin/rtpengine /usr/local/bin/
+COPY --from=rtpengine-recording /usr/local/bin/rtpengine-recording /usr/local/bin/
 COPY ./entrypoint.sh /entrypoint.sh
 RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd && \
   groupadd --gid 1000 rtpengine && \
