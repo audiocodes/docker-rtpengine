@@ -1,0 +1,31 @@
+From 8ce61a4d6a283010e13579069d2e0136898f2677 Mon Sep 17 00:00:00 2001
+From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
+Date: Thu, 2 Jan 2025 15:57:28 +0200
+Subject: [PATCH] Consider also sendonly as "active" for timeout
+
+The logic in call_timer_iterator assumes that sendonly is hold, and then
+it uses silent_timeout (1h) instead of timeout (1m).
+
+In drachtio-siprec, the SEND channel actually receives media, so we need
+to use the same timeout of 1m. We also don't have real sendonly channels
+so only if both SEND and RECV are unset, silent_timeout should be used.
+---
+ daemon/call.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/daemon/call.c b/daemon/call.c
+index 94be70fd..fb4e94bd 100644
+--- a/daemon/call.c
++++ b/daemon/call.c
+@@ -239,7 +239,7 @@ no_sfd:
+ 
+ 		check = atomic_get_na(&rtpe_config.timeout);
+ 		tmp_t_reason = TIMEOUT;
+-		if (!MEDIA_ISSET(ps->media, RECV) || !sfd) {
++		if ((!MEDIA_ISSET(ps->media, RECV) && !MEDIA_ISSET(ps->media, SEND)) || !sfd) {
+ 			check = atomic_get_na(&rtpe_config.silent_timeout);
+ 			tmp_t_reason = SILENT_TIMEOUT;
+ 		}
+-- 
+2.43.0
+

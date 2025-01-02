@@ -28,10 +28,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libwebsockets-dev \
   libxmlrpc-core-c3-dev \
   make \
-  markdown
+  markdown \
+  patch
 
 WORKDIR /usr/src
 RUN git clone --depth 1 --branch mr13.1.1.1 https://github.com/sipwise/rtpengine
+RUN --mount=target=/local patch -d rtpengine -p1 -i /local/0001-Consider-also-sendonly-as-active-for-timeout.patch
 
 FROM build AS rtpengine
 WORKDIR /usr/src/rtpengine/daemon
