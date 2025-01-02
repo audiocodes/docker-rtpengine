@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   markdown
 
 WORKDIR /usr/src
-RUN git clone --depth 1 --branch mr12.5.1.18 https://github.com/sipwise/rtpengine
+RUN git clone --depth 1 --branch mr13.1.1.1 https://github.com/sipwise/rtpengine
 
 FROM build AS rtpengine
 WORKDIR /usr/src/rtpengine/daemon
