@@ -1,0 +1,36 @@
+From aae5a7751bafb7ed7c34fca7934445cafc53caa9 Mon Sep 17 00:00:00 2001
+From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
+Date: Sun, 6 Apr 2025 17:49:55 +0300
+Subject: [PATCH 2/2] Prevent warning logs when recording-method is pcap #2
+
+If recording-method is pcap, then proc is zero-initialized, so
+meta_filepath is empty. This shows many logs such as:
+
+[core] Failed to open recording metadata file '(null)' for writing: Bad address
+
+Prevent them by returning earlier.
+
+Fixes #1889 for real this time.
+
+Amends commit 759fd72dc6866b2c89eddd8940bb4b2040699f23.
+---
+ daemon/recording.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/daemon/recording.c b/daemon/recording.c
+index 73a6dd8b..f1f444bb 100644
+--- a/daemon/recording.c
++++ b/daemon/recording.c
+@@ -835,6 +835,9 @@ static int vappend_meta_chunk(struct recording *recording, const char *buf, unsi
+ 		const char *label_fmt, va_list ap)
+ {
+ 	struct iovec iov;
++	if (!recording->proc.meta_filepath)
++		return -1;
++
+ 	iov.iov_base = (void *) buf;
+ 	iov.iov_len = buflen;
+ 
+-- 
+2.43.0
+
