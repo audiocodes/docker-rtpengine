@@ -26,16 +26,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libspandsp-dev \
   libssl-dev \
   libwebsockets-dev \
-  libxmlrpc-core-c3-dev \
   make \
   markdown \
   patch
 
 WORKDIR /usr/src
-RUN git clone --depth 1 --branch mr13.2.1.9 https://github.com/sipwise/rtpengine
+RUN git clone --depth 1 --branch mr13.3.1.2 https://github.com/sipwise/rtpengine
 RUN --mount=target=/local \
-  patch -d rtpengine -p1 -i /local/0001-Consider-also-sendonly-as-active-for-timeout.patch && \
-  patch -d rtpengine -p1 -i /local/0002-Prevent-warning-logs-when-recording-method-is-pcap-2.patch
+  patch -d rtpengine -p1 -i /local/0001-Consider-also-sendonly-as-active-for-timeout.patch
 
 FROM build AS rtpengine
 WORKDIR /usr/src/rtpengine/daemon
@@ -78,7 +76,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libspandsp2 \
   libssl3 \
   libwebsockets17 \
-  libxmlrpc-core-c3 \
   net-tools \
   procps \
   sudo \
