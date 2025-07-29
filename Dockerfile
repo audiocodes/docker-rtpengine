@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   patch
 
 WORKDIR /usr/src
-RUN git clone --depth 1 --branch mr13.3.1.7 https://github.com/sipwise/rtpengine
+RUN git clone --depth 1 --branch mr13.4.1.2 https://github.com/sipwise/rtpengine
 RUN --mount=target=/local \
   patch -d rtpengine -p1 -i /local/0001-Consider-also-sendonly-as-active-for-timeout.patch
 
