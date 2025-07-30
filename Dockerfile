@@ -1,6 +1,7 @@
-FROM debian:bookworm-slim AS build
+FROM debian:trixie-slim AS build
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   build-essential \
   ca-certificates \
   curl \
@@ -22,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libnftnl-dev \
   libopus-dev \
   libpcap-dev \
-  libpcre3-dev \
+  libpcre2-dev \
   libspandsp-dev \
   libssl-dev \
   libwebsockets-dev \
@@ -47,7 +48,7 @@ WORKDIR /usr/src/rtpengine/recording-daemon
 RUN make -j$(nproc) rtpengine-recording && \
   strip -o /usr/local/bin/rtpengine-recording rtpengine-recording
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 VOLUME ["/rec"]
 ENTRYPOINT ["/entrypoint.sh"]
@@ -55,29 +56,29 @@ CMD ["rtpengine"]
 
 EXPOSE 23000-65535/udp 22222/udp
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   curl \
   iproute2 \
   iptables \
   libglib2.0-0 \
   libavcodec-extra \
-  libavfilter8 \
+  libavfilter10 \
   libcurl4 \
   libevent-2.1-7 \
   libevent-pthreads-2.1-7 \
-  libhiredis0.14 \
+  libhiredis1.1.0 \
   libip6tc2 \
-  libiptc0 \
   libjson-glib-1.0-0 \
   libmariadb3 \
   libmnl0 \
   libnftnl11 \
   libopus0 \
   libpcap0.8 \
-  libpcre3 \
+  libpcre2-8-0 \
   libspandsp2 \
   libssl3 \
-  libwebsockets17 \
+  libwebsockets19 \
   net-tools \
   procps \
   sudo \
