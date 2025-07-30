@@ -1,7 +1,7 @@
 From 47db60278ab8f79a2c828de02aeb8b87c717934e Mon Sep 17 00:00:00 2001
 From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
 Date: Tue, 29 Jul 2025 16:01:13 +0300
-Subject: [PATCH 2/2] respect pause recording command
+Subject: [PATCH 2/4] respect pause recording command
 
 The command was accepted, but recording continued as usual.
 ---

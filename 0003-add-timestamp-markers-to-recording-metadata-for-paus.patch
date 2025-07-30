@@ -1,0 +1,79 @@
+From 033499bd4041b44309b0975814b787f2eb8f8126 Mon Sep 17 00:00:00 2001
+From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
+Date: Wed, 30 Jul 2025 08:52:14 +0300
+Subject: [PATCH 3/4] add timestamp markers to recording metadata for
+ pause/resume events
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Write human-readable timestamp markers to the metadata file whenever
+recording is paused or resumed via control protocol commands.
+
+Include ISO-format timestamps with millisecond precision that aid in
+tracking changes in recording state.
+
+Example metadata output:
+  Recording paused at: 2025-07-29T15:30:45 (1234567.890 ms)
+  Recording resumed at: 2025-07-29T15:31:20 (1234598.123 ms)
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+---
+ daemon/recording.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/daemon/recording.c b/daemon/recording.c
+index b3c979d8..6e7e9a07 100644
+--- a/daemon/recording.c
++++ b/daemon/recording.c
+@@ -402,7 +402,23 @@ void recording_start_daemon(call_t *call) {
+ }
+ // lock must be held
+ void recording_start(call_t *call) {
++	bool was_paused = call->recording && !CALL_ISSET(call, RECORDING_ON);
+ 	CALL_SET(call, RECORDING_ON);
++
++	// Write resume timestamp to metadata file if resuming a paused recording
++	if (was_paused && call->recording->pcap.meta_fp) {
++		time_t now = rtpe_now / 1000000;
++		char timebuffer[32];
++		struct tm timeinfo;
++		if (localtime_r(&now, &timeinfo) != NULL) {
++			strftime(timebuffer, sizeof(timebuffer), "%FT%T", &timeinfo);
++			fprintf(call->recording->pcap.meta_fp,
++				"\nRecording resumed at: %s (%.3lf ms)\n",
++				timebuffer, rtpe_now / 1000.0);
++			fflush(call->recording->pcap.meta_fp);
++		}
++	}
++
+ 	recording_start_daemon(call);
+ }
+ // lock must be held
+@@ -438,6 +454,21 @@ void recording_pause(call_t *call) {
+ 	if (!call->recording)
+ 		return;
+ 	ilog(LOG_NOTICE, "Pausing call recording.");
++
++	// Write pause timestamp to metadata file
++	if (call->recording->pcap.meta_fp) {
++		time_t now = rtpe_now / 1000000;
++		char timebuffer[32];
++		struct tm timeinfo;
++		if (localtime_r(&now, &timeinfo) != NULL) {
++			strftime(timebuffer, sizeof(timebuffer), "%FT%T", &timeinfo);
++			fprintf(call->recording->pcap.meta_fp,
++				"\nRecording paused at: %s (%.3lf ms)\n",
++				timebuffer, rtpe_now / 1000.0);
++			fflush(call->recording->pcap.meta_fp);
++		}
++	}
++
+ 	recording_update_flags(call, true);
+ }
+ // lock must be held
+-- 
+2.43.0
+
