@@ -19,6 +19,7 @@ RUN apt-get update \
   libhiredis-dev \
   libiptc-dev \
   libjson-glib-dev \
+  libjwt-dev \
   libmnl-dev \
   libnftnl-dev \
   libopus-dev \
@@ -32,7 +33,7 @@ RUN apt-get update \
   patch
 
 WORKDIR /usr/src
-RUN git clone --depth 1 --branch mr13.4.1.2 https://github.com/sipwise/rtpengine
+RUN git clone --depth 1 --branch mr13.5.1.1 https://github.com/sipwise/rtpengine
 RUN --mount=target=/local \
   for patch_file in /local/*.patch; do \
     patch -d rtpengine -p1 -i "$patch_file"; \
@@ -70,6 +71,7 @@ RUN apt-get update \
   libhiredis1.1.0 \
   libip6tc2 \
   libjson-glib-1.0-0 \
+  libjwt2 \
   libmariadb3 \
   libmnl0 \
   libnftnl11 \

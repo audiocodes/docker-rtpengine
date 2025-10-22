@@ -1,7 +1,7 @@
-From fbb87ea4733ef140efc8a52113fcdc337a1b6c95 Mon Sep 17 00:00:00 2001
+From 6686afb347e4710104f39700acc91b252fd3a146 Mon Sep 17 00:00:00 2001
 From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
 Date: Thu, 2 Jan 2025 15:57:28 +0200
-Subject: [PATCH 1/4] Consider also sendonly as "active" for timeout
+Subject: [PATCH] Consider also sendonly as "active" for timeout
 
 The logic in call_timer_iterator assumes that sendonly is hold, and then
 it uses silent_timeout (1h) instead of timeout (1m).
@@ -14,10 +14,10 @@ so only if both SEND and RECV are unset, silent_timeout should be used.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/daemon/call.c b/daemon/call.c
-index b2d9a3ba..978b1ce1 100644
+index 88d63917..b8b82810 100644
 --- a/daemon/call.c
 +++ b/daemon/call.c
-@@ -219,7 +219,7 @@ no_sfd:
+@@ -226,7 +226,7 @@ no_sfd:
  
  		check = atomic_get_na(&rtpe_config.timeout_us);
  		tmp_t_reason = TIMEOUT;
