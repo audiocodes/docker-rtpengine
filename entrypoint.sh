@@ -37,7 +37,7 @@ else
   LOCAL_IP="$MY_IP"
 fi
 
-sed -i -e "s/interface=MY_IP/interface=$MY_IP/g" rtpengine.conf
+sed -i -e "s:\(interface=.*\)MY_IP:\1$MY_IP:g" rtpengine.conf
 sed -i -e "s/MY_IP/$LOCAL_IP/g" rtpengine.conf
 
 if [ "$1" = 'rtpengine' ]; then
