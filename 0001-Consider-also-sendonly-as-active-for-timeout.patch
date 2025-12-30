@@ -1,4 +1,4 @@
-From 6686afb347e4710104f39700acc91b252fd3a146 Mon Sep 17 00:00:00 2001
+From daba969d54454dca2b1938a0e16fc65414594181 Mon Sep 17 00:00:00 2001
 From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
 Date: Thu, 2 Jan 2025 15:57:28 +0200
 Subject: [PATCH] Consider also sendonly as "active" for timeout
@@ -14,18 +14,18 @@ so only if both SEND and RECV are unset, silent_timeout should be used.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/daemon/call.c b/daemon/call.c
-index 88d63917..b8b82810 100644
+index 7bfba099..7560f61d 100644
 --- a/daemon/call.c
 +++ b/daemon/call.c
-@@ -226,7 +226,7 @@ no_sfd:
- 
+@@ -229,7 +229,7 @@ no_sfd:
+ 		bool *check_good = &recv_good;
  		check = atomic_get_na(&rtpe_config.timeout_us);
  		tmp_t_reason = TIMEOUT;
 -		if (!MEDIA_ISSET(ps->media, RECV) || !sfd) {
 +		if ((!MEDIA_ISSET(ps->media, RECV) && !MEDIA_ISSET(ps->media, SEND)) || !sfd) {
  			check = atomic_get_na(&rtpe_config.silent_timeout_us);
  			tmp_t_reason = SILENT_TIMEOUT;
- 		}
+ 			check_good = &silent_good;
 -- 
-2.43.0
+2.51.0
 
