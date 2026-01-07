@@ -19,6 +19,7 @@ RUN apt-get update \
   libhiredis-dev \
   libiptc-dev \
   libjson-glib-dev \
+  libjwt-dev \
   libmnl-dev \
   libnftnl-dev \
   libopus-dev \
@@ -70,6 +71,7 @@ RUN apt-get update \
   libhiredis1.1.0 \
   libip6tc2 \
   libjson-glib-1.0-0 \
+  libjwt2 \
   libmariadb3 \
   libmnl0 \
   libnftnl11 \
