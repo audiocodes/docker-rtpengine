@@ -1,7 +1,7 @@
-From 692154b824c8f2e8ee7d0ec1e0910036cfed5d37 Mon Sep 17 00:00:00 2001
+From 247985fbcdd69f7c53bfb84d3cd57e01f967d04a Mon Sep 17 00:00:00 2001
 From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
 Date: Wed, 7 Jan 2026 15:30:41 +0200
-Subject: [PATCH 2/2] Support "record call" for publish
+Subject: [PATCH] Support "record call" for publish
 
 Initial call recording is set by "record call". This worked for
 offer/answer but not for publish.
