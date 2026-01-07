@@ -1,7 +1,7 @@
 From 6686afb347e4710104f39700acc91b252fd3a146 Mon Sep 17 00:00:00 2001
 From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
 Date: Thu, 2 Jan 2025 15:57:28 +0200
-Subject: [PATCH] Consider also sendonly as "active" for timeout
+Subject: [PATCH 1/2] Consider also sendonly as "active" for timeout
 
 The logic in call_timer_iterator assumes that sendonly is hold, and then
 it uses silent_timeout (1h) instead of timeout (1m).
