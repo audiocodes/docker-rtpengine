@@ -1,0 +1,52 @@
+From 692154b824c8f2e8ee7d0ec1e0910036cfed5d37 Mon Sep 17 00:00:00 2001
+From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
+Date: Wed, 7 Jan 2026 15:30:41 +0200
+Subject: [PATCH 2/2] Support "record call" for publish
+
+Initial call recording is set by "record call". This worked for
+offer/answer but not for publish.
+---
+ daemon/call_interfaces.c | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/daemon/call_interfaces.c b/daemon/call_interfaces.c
+index 57d0b7eb..ec8c6e37 100644
+--- a/daemon/call_interfaces.c
++++ b/daemon/call_interfaces.c
+@@ -4094,6 +4094,7 @@ const char *call_publish_ng(ng_command_ctx_t *ctx, const char *addr) {
+ 	g_autoptr(call_t) call = NULL;
+ 	int ret;
+ 	const ng_parser_t *parser = ctx->parser_ctx.parser;
++	struct recording *recording = NULL;
+ 
+ 	call_ng_process_flags(&flags, ctx);
+ 
+@@ -4120,12 +4121,22 @@ const char *call_publish_ng(ng_command_ctx_t *ctx, const char *addr) {
+ 	if (ret)
+ 		ilog(LOG_ERR, "Publish error"); // XXX close call? handle errors?
+ 
++	update_metadata_monologue(ml, &flags);
++	detect_setup_recording(ml->call, &flags);
++
++	recording = call->recording;
++
++	meta_write_sdp_before(recording, &sdp_in, ml, flags.opmode);
+ 	ret = sdp_create(&sdp_out, ml, &flags);
+ 	if (!ret) {
+ 		save_last_sdp(ml, &sdp_in, &parsed, &streams);
+-		ctx->ngbuf->sdp_out = sdp_out.s;
+-		parser->dict_add_str(ctx->resp, "sdp", &sdp_out);
+-		sdp_out = STR_NULL; // ownership passed to output
++		if (sdp_out.len) {
++			ctx->ngbuf->sdp_out = sdp_out.s;
++			parser->dict_add_str(ctx->resp, "sdp", &sdp_out);
++
++			meta_write_sdp_after(recording, &sdp_out, ml, flags.opmode);
++			sdp_out = STR_NULL; // ownership passed to output
++		}
+ 	}
+ 
+ 	if (ret)
+-- 
+2.51.0
+
