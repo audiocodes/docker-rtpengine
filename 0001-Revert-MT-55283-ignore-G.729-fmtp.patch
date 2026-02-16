@@ -1,0 +1,126 @@
+From ce7e4736087cb51a4ff64078d6e0a9bb6437b312 Mon Sep 17 00:00:00 2001
+From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
+Date: Mon, 16 Feb 2026 14:32:55 +0200
+Subject: [PATCH] Revert "MT#55283 ignore G.729 fmtp"
+
+This reverts commit 799830902ed2be93156f19c75fa8cc8060dbf107.
+---
+ lib/codeclib.c         | 21 +++++++++++++++++++--
+ t/auto-daemon-tests.pl | 15 ++++-----------
+ 2 files changed, 23 insertions(+), 13 deletions(-)
+
+diff --git a/lib/codeclib.c b/lib/codeclib.c
+index e34d29ae..14df2dad 100644
+--- a/lib/codeclib.c
++++ b/lib/codeclib.c
+@@ -312,6 +312,7 @@ static const dtx_method_t dtx_method_evs = {
+ 
+ #ifdef HAVE_BCG729
+ static packetizer_f packetizer_g729; // aggregate some frames into packets
++static format_cmp_f format_cmp_g729;
+ 
+ static void bcg729_def_init(struct codec_def_s *);
+ static const char *bcg729_decoder_init(decoder_t *, const str *);
+@@ -462,7 +463,7 @@ static struct codec_def_s __codec_defs[] = {
+ 		.default_ptime = 20,
+ 		.minimum_ptime = 20,
+ 		.default_fmtp = "annexb=yes",
+-		.format_cmp = format_cmp_ignore,
++		.format_cmp = format_cmp_g729,
+ 		.packetizer = packetizer_g729,
+ 		.bits_per_sample = 1, // 10 ms frame has 80 samples and encodes as (max) 10 bytes = 80 bits
+ 		.media_type = MT_AUDIO,
+@@ -481,7 +482,7 @@ static struct codec_def_s __codec_defs[] = {
+ 		.default_ptime = 20,
+ 		.minimum_ptime = 20,
+ 		.default_fmtp = "annexb=no",
+-		.format_cmp = format_cmp_ignore,
++		.format_cmp = format_cmp_g729,
+ 		.packetizer = packetizer_g729,
+ 		.bits_per_sample = 1, // 10 ms frame has 80 samples and encodes as (max) 10 bytes = 80 bits
+ 		.media_type = MT_AUDIO,
+@@ -3633,6 +3634,22 @@ static int packetizer_g729(AVPacket *pkt, GString *buf, str *input_output, encod
+ 	input_output->len = output.s - input_output->s;
+ 	return buf->len >= 2 ? 1 : 0;
+ }
++
++static bool g729_is_annex_b(const struct rtp_payload_type *p) {
++	// defaults based on codec name (G729 vs G729a)
++	bool annex_b = p->encoding.len && !((p->encoding.s[p->encoding.len - 1] & 0xdf) == 'A');
++	// override per fmtp
++	if (str_str(&p->format_parameters, "annexb=no") != -1)
++		annex_b = false;
++	else if (str_str(&p->format_parameters, "annexb=yes") != -1)
++		annex_b = true;
++	return annex_b;
++}
++static int format_cmp_g729(const struct rtp_payload_type *a, const struct rtp_payload_type *b) {
++	bool a_b = g729_is_annex_b(a);
++	bool b_b = g729_is_annex_b(b);
++	return a_b == b_b ? 0 : -1;
++}
+ #endif
+ 
+ 
+diff --git a/t/auto-daemon-tests.pl b/t/auto-daemon-tests.pl
+index d0296217..7b7c8c57 100755
+--- a/t/auto-daemon-tests.pl
++++ b/t/auto-daemon-tests.pl
+@@ -1517,12 +1517,10 @@ v=0
+ o=- 1737116508926565 1737116508926565 IN IP4 5.6.7.7
+ s=SIP call
+ t=0 0
+-m=audio PORT RTP/AVP 8 0 18 100
++m=audio PORT RTP/AVP 8 0 100
+ c=IN IP4 203.0.113.1
+ a=rtpmap:8 PCMA/8000
+ a=rtpmap:0 PCMU/8000
+-a=rtpmap:18 G729/8000
+-a=fmtp:18 annexb=no
+ a=rtpmap:100 telephone-event/8000
+ a=fmtp:100 0-11
+ a=sendrecv
+@@ -1580,11 +1578,10 @@ v=0
+ o=- 1737116508926565 1737116508926565 IN IP4 5.6.7.7
+ s=SIP call
+ t=0 0
+-m=audio PORT RTP/AVP 8 0 18 100
++m=audio PORT RTP/AVP 8 0 100
+ c=IN IP4 203.0.113.1
+ a=rtpmap:8 PCMA/8000
+ a=rtpmap:0 PCMU/8000
+-a=rtpmap:18 G729a/8000
+ a=rtpmap:100 telephone-event/8000
+ a=fmtp:100 0-11
+ a=sendrecv
+@@ -1642,12 +1639,10 @@ v=0
+ o=- 1737116508926565 1737116508926565 IN IP4 5.6.7.7
+ s=SIP call
+ t=0 0
+-m=audio PORT RTP/AVP 8 0 18 100
++m=audio PORT RTP/AVP 8 0 100
+ c=IN IP4 203.0.113.1
+ a=rtpmap:8 PCMA/8000
+ a=rtpmap:0 PCMU/8000
+-a=rtpmap:18 G729a/8000
+-a=fmtp:18 annexb=no
+ a=rtpmap:100 telephone-event/8000
+ a=fmtp:100 0-11
+ a=sendrecv
+@@ -1705,12 +1700,10 @@ v=0
+ o=- 1737116508926565 1737116508926565 IN IP4 5.6.7.7
+ s=SIP call
+ t=0 0
+-m=audio PORT RTP/AVP 8 0 18 100
++m=audio PORT RTP/AVP 8 0 100
+ c=IN IP4 203.0.113.1
+ a=rtpmap:8 PCMA/8000
+ a=rtpmap:0 PCMU/8000
+-a=rtpmap:18 G729a/8000
+-a=fmtp:18 annexb=no
+ a=rtpmap:100 telephone-event/8000
+ a=fmtp:100 0-11
+ a=sendrecv
+-- 
+2.43.0
+
