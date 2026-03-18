@@ -35,11 +35,7 @@ RUN apt-get update \
   patch
 
 WORKDIR /usr/src
-RUN git clone --depth 1 --branch mr14.0.1.4 https://github.com/sipwise/rtpengine
-RUN --mount=target=/local \
-  for patch_file in /local/*.patch; do \
-    patch -d rtpengine -p1 -i "$patch_file"; \
-  done
+RUN git clone --depth 1 --branch mr14.1.1.3 https://github.com/sipwise/rtpengine
 
 FROM build AS rtpengine
 WORKDIR /usr/src/rtpengine/daemon
