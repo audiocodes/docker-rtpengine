@@ -1,97 +1,27 @@
-FROM debian:trixie-slim AS build
-
-RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  build-essential \
-  ca-certificates \
-  curl \
-  default-libmysqlclient-dev \
-  g++ \
-  gcc \
-  git \
-  gperf \
-  iproute2 \
-  iptables \
-  libavcodec-extra \
-  libavfilter-dev \
-  libbcg729-dev \
-  libcurl4-openssl-dev \
-  libevent-dev \
-  libhiredis-dev \
-  libiptc-dev \
-  libjson-glib-dev \
-  libjwt-dev \
-  libmnl-dev \
-  libncursesw5-dev \
-  libnftnl-dev \
-  libopus-dev \
-  libpcap-dev \
-  libpcre2-dev \
-  libspandsp-dev \
-  libssl-dev \
-  libwebsockets-dev \
-  make \
-  markdown \
-  patch
-
-WORKDIR /usr/src
-RUN git clone --depth 1 --branch mr14.1.1.3 https://github.com/sipwise/rtpengine
-
-FROM build AS rtpengine
-WORKDIR /usr/src/rtpengine/daemon
-RUN make -j$(nproc) rtpengine && \
-  strip -o /usr/local/bin/rtpengine rtpengine
-
-FROM build AS rtpengine-recording
-WORKDIR /usr/src/rtpengine/recording-daemon
-RUN make -j$(nproc) rtpengine-recording && \
-  strip -o /usr/local/bin/rtpengine-recording rtpengine-recording
-
 FROM debian:trixie-slim
 
 VOLUME ["/rec"]
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["rtpengine"]
+ENV RTPENGINE_VER=14.1.1.5
 
 EXPOSE 23000-65535/udp 22222/udp
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   curl \
-  iproute2 \
-  iptables \
-  libglib2.0-0 \
+  less \
   libavcodec-extra \
-  libavfilter10 \
-  libbcg729-0 \
-  libcurl4 \
-  libevent-2.1-7 \
-  libevent-pthreads-2.1-7 \
-  libhiredis1.1.0 \
-  libip6tc2 \
-  libjson-glib-1.0-0 \
-  libjwt2 \
-  libmariadb3 \
-  libmnl0 \
-  libncursesw6 \
-  libnftnl11 \
-  libopus0 \
-  libpcap0.8 \
-  libpcre2-8-0 \
-  libspandsp2 \
-  libssl3 \
-  libwebsockets19 \
   net-tools \
-  procps \
   sudo \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+  && ARCH=$(dpkg --print-architecture) \
+  && curl -kLO https://github.com/sipwise/rtpengine/releases/download/mr${RTPENGINE_VER}/rtpengine-daemon_${RTPENGINE_VER}+0.mr${RTPENGINE_VER}+gh+trixie_${ARCH}.deb \
+  && curl -kLO https://github.com/sipwise/rtpengine/releases/download/mr${RTPENGINE_VER}/rtpengine-recording-daemon_${RTPENGINE_VER}+0.mr${RTPENGINE_VER}+gh+trixie_${ARCH}.deb \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ./*.deb \
+  && apt-get clean && rm -rf *.deb /var/lib/apt/lists/*
 
-COPY --from=rtpengine /usr/local/bin/rtpengine /usr/local/bin/
-COPY --from=rtpengine-recording /usr/local/bin/rtpengine-recording /usr/local/bin/
 COPY ./entrypoint.sh /entrypoint.sh
-RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd && \
-  groupadd --gid 1000 rtpengine && \
-  useradd --uid 1000 --gid rtpengine -G sudo --shell /bin/bash --create-home rtpengine
+RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd
 USER rtpengine
 WORKDIR /home/rtpengine
 COPY ./rtpengine.conf .
