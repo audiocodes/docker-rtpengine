@@ -1,0 +1,66 @@
+From feb98f6653b78ea57be6248e8ac8bb7f4113f3b2 Mon Sep 17 00:00:00 2001
+From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
+Date: Mon, 11 May 2026 15:29:26 +0300
+Subject: [PATCH 2/2] support 'all' codec accept mode
+
+Add the 'all' keyword for the codec accept option in publish mode:
+- 'all': keep all codecs supported for transcoding and their
+  supplemental codecs, removing only unsupported ones
+- 'all' + 'any': keep all codecs from the offer without removing any
+---
+ daemon/codec.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/daemon/codec.c b/daemon/codec.c
+index 2d93d840..7fff575c 100644
+--- a/daemon/codec.c
++++ b/daemon/codec.c
+@@ -6005,6 +6005,7 @@ int codec_store_accept_one(struct codec_store *cs, str_q *accept, bool accept_an
+ 	// local codec-accept routine: accept first supported codec, or first from "accept" list
+ 	// if given
+ 
++	bool accept_all = false;
+ 	rtp_payload_type *accept_pt = NULL;
+ 
+ 	for (__auto_type l = accept->head; l; l = l->next) {
+@@ -6014,6 +6015,10 @@ int codec_store_accept_one(struct codec_store *cs, str_q *accept, bool accept_an
+ 			accept_any = true;
+ 			continue;
+ 		}
++		if (!str_cmp(codec, "all")) {
++			accept_all = true;
++			continue;
++		}
+ 		GQueue *pts = t_hash_table_lookup(cs->codec_names, codec);
+ 		if (!pts)
+ 			continue;
+@@ -6032,6 +6037,9 @@ int codec_store_accept_one(struct codec_store *cs, str_q *accept, bool accept_an
+ 			break;
+ 	}
+ 
++	if (accept_all && accept_any)
++		return 0;
++
+ 	if (!accept_pt) {
+ 		// none found yet - pick the first one
+ 		for (__auto_type l = cs->codec_prefs.head; l; l = l->next) {
+@@ -6061,7 +6069,15 @@ int codec_store_accept_one(struct codec_store *cs, str_q *accept, bool accept_an
+ 			continue;
+ 		}
+ 		ensure_codec_def(pt, cs->media);
+-		if (pt->codec_def && pt->codec_def->supplemental
++		if (accept_all) {
++			if (codec_def_supported(pt->codec_def)
++					|| (pt->codec_def && pt->codec_def->supplemental))
++			{
++				link = link->next;
++				continue;
++			}
++		}
++		else if (pt->codec_def && pt->codec_def->supplemental
+ 				&& pt->clock_rate == accept_pt->clock_rate)
+ 		{
+ 			link = link->next;
+-- 
+2.53.0
+
