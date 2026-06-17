@@ -53,6 +53,7 @@ RUN make -j$(nproc) rtpengine-recording && \
 
 FROM debian:trixie-slim
 
+VOLUME ["/rec"]
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["rtpengine"]
 
@@ -96,6 +97,5 @@ RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd && \
   groupadd --gid 1000 rtpengine && \
   useradd --uid 1000 --gid rtpengine -G sudo --shell /bin/bash --create-home rtpengine
 USER rtpengine
-VOLUME ["/rec"]
 WORKDIR /home/rtpengine
 COPY ./rtpengine.conf .
