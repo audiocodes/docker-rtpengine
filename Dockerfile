@@ -3,7 +3,7 @@ FROM debian:trixie-slim
 VOLUME ["/rec"]
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["rtpengine"]
-ENV RTPENGINE_VER=14.1.1.5
+ENV RTPENGINE_VER=26.1.1.9
 
 EXPOSE 23000-65535/udp 22222/udp
 
