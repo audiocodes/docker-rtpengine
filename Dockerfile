@@ -21,7 +21,8 @@ RUN apt-get update \
   && apt-get clean && rm -rf *.deb /var/lib/apt/lists/*
 
 COPY ./entrypoint.sh /entrypoint.sh
-RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd
+RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd \
+  && install -d -o rtpengine -g rtpengine /home/rtpengine
 USER rtpengine
 WORKDIR /home/rtpengine
-COPY ./rtpengine.conf .
+COPY --chown=rtpengine:rtpengine ./rtpengine.conf .
