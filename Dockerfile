@@ -7,7 +7,9 @@ ENV RTPENGINE_VER=26.2.1.2
 
 EXPOSE 23000-65535/udp 22222/udp
 
-RUN apt-get update \
+RUN groupadd --gid 1000 rtpengine \
+  && useradd --uid 1000 --gid rtpengine -G sudo --shell /bin/bash --create-home rtpengine \
+  && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   curl \
   less \
@@ -21,8 +23,7 @@ RUN apt-get update \
   && apt-get clean && rm -rf *.deb /var/lib/apt/lists/*
 
 COPY ./entrypoint.sh /entrypoint.sh
-RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd \
-  && install -d -o rtpengine -g rtpengine /home/rtpengine
+RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd
 USER rtpengine
 WORKDIR /home/rtpengine
 COPY --chown=rtpengine:rtpengine ./rtpengine.conf .
