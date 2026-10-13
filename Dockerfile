@@ -1,9 +1,64 @@
+FROM debian:trixie-slim AS build
+ARG RTPENGINE_VER=26.2.1.2
+
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+  build-essential \
+  ca-certificates \
+  curl \
+  default-libmysqlclient-dev \
+  g++ \
+  gcc \
+  git \
+  gperf \
+  iproute2 \
+  iptables \
+  libavcodec-extra \
+  libavfilter-dev \
+  libbcg729-dev \
+  libcurl4-openssl-dev \
+  libevent-dev \
+  libhiredis-dev \
+  libiptc-dev \
+  libjson-glib-dev \
+  libjwt-dev \
+  libmnl-dev \
+  libmosquitto-dev \
+  libncursesw5-dev \
+  libnftnl-dev \
+  libopus-dev \
+  libpcap-dev \
+  libpcre2-dev \
+  libspandsp-dev \
+  libssl-dev \
+  liburing-dev \
+  libwebsockets-dev \
+  make \
+  markdown \
+  patch
+
+WORKDIR /usr/src
+RUN git clone --depth 1 --branch mr${RTPENGINE_VER} https://github.com/sipwise/rtpengine
+RUN --mount=target=/local \
+  for patch_file in /local/*.patch; do \
+    patch -d rtpengine -p1 -i "$patch_file"; \
+  done
+
+FROM build AS rtpengine
+WORKDIR /usr/src/rtpengine/daemon
+RUN make -j$(nproc) rtpengine && \
+  strip -o /usr/local/bin/rtpengine rtpengine
+
+FROM build AS rtpengine-recording
+WORKDIR /usr/src/rtpengine/recording-daemon
+RUN make -j$(nproc) rtpengine-recording && \
+  strip -o /usr/local/bin/rtpengine-recording rtpengine-recording
+
 FROM debian:trixie-slim
 
 VOLUME ["/rec"]
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["rtpengine"]
-ENV RTPENGINE_VER=26.2.1.2
 
 EXPOSE 23000-65535/udp 22222/udp
 
@@ -12,16 +67,39 @@ RUN groupadd --gid 1000 rtpengine \
   && apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   curl \
+  iproute2 \
+  iptables \
   less \
+  libglib2.0-0 \
   libavcodec-extra \
+  libavfilter10 \
+  libbcg729-0 \
+  libcurl4 \
+  libevent-2.1-7 \
+  libevent-pthreads-2.1-7 \
+  libhiredis1.1.0 \
+  libip6tc2 \
+  libjson-glib-1.0-0 \
+  libjwt2 \
+  libmariadb3 \
+  libmnl0 \
+  libmosquitto1 \
+  libncursesw6 \
+  libnftnl11 \
+  libopus0 \
+  libpcap0.8 \
+  libpcre2-8-0 \
+  libspandsp2 \
+  libssl3 \
+  liburing2 \
+  libwebsockets19 \
   net-tools \
+  procps \
   sudo \
-  && ARCH=$(dpkg --print-architecture) \
-  && curl -kLO https://github.com/sipwise/rtpengine/releases/download/mr${RTPENGINE_VER}/rtpengine-daemon_${RTPENGINE_VER}+0.mr${RTPENGINE_VER}+gh+trixie_${ARCH}.deb \
-  && curl -kLO https://github.com/sipwise/rtpengine/releases/download/mr${RTPENGINE_VER}/rtpengine-recording-daemon_${RTPENGINE_VER}+0.mr${RTPENGINE_VER}+gh+trixie_${ARCH}.deb \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ./*.deb \
-  && apt-get clean && rm -rf *.deb /var/lib/apt/lists/*
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+COPY --from=rtpengine /usr/local/bin/rtpengine /usr/local/bin/
+COPY --from=rtpengine-recording /usr/local/bin/rtpengine-recording /usr/local/bin/
 COPY ./entrypoint.sh /entrypoint.sh
 RUN echo '%sudo   ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nopasswd
 USER rtpengine
