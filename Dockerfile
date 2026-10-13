@@ -22,6 +22,7 @@ RUN apt-get update \
   libjson-glib-dev \
   libjwt-dev \
   libmnl-dev \
+  libmosquitto-dev \
   libncursesw5-dev \
   libnftnl-dev \
   libopus-dev \
@@ -29,6 +30,7 @@ RUN apt-get update \
   libpcre2-dev \
   libspandsp-dev \
   libssl-dev \
+  liburing-dev \
   libwebsockets-dev \
   make \
   markdown \
@@ -64,6 +66,7 @@ RUN apt-get update \
   curl \
   iproute2 \
   iptables \
+  less \
   libglib2.0-0 \
   libavcodec-extra \
   libavfilter10 \
@@ -77,6 +80,7 @@ RUN apt-get update \
   libjwt2 \
   libmariadb3 \
   libmnl0 \
+  libmosquitto1 \
   libncursesw6 \
   libnftnl11 \
   libopus0 \
@@ -84,6 +88,7 @@ RUN apt-get update \
   libpcre2-8-0 \
   libspandsp2 \
   libssl3 \
+  liburing2 \
   libwebsockets19 \
   net-tools \
   procps \

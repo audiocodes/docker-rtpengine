@@ -1,7 +1,7 @@
-From e049e4b4809dea3674cd3f6cba38c609d5c695a6 Mon Sep 17 00:00:00 2001
+From 7183297e2045a938a1ed04a1f5f86203fb3dcdf5 Mon Sep 17 00:00:00 2001
 From: Orgad Shaneh <orgad.shaneh@audiocodes.com>
 Date: Mon, 4 May 2026 20:34:20 +0300
-Subject: [PATCH 1/2] MT#55283 preserve supplemental codecs in publish mode
+Subject: [PATCH 1/4] MT#55283 preserve supplemental codecs in publish mode
 
 Add RED (RFC 2198) codec definition to codeclib as a supplemental codec.
 Modify codec_store_accept_one() to preserve supplemental codecs whose
